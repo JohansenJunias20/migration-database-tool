@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using MySql.Data.MySqlClient;
 using FirebirdSql.Data.FirebirdClient;
+using System.Globalization;
+using System.Threading;
 
 namespace migrationTool
 {
@@ -19,9 +21,10 @@ namespace migrationTool
         {
             InitializeComponent();
             toolTip2.SetToolTip(ignoreExistCheckBox, "ignore warning table already exist. If your mysql database target already has tables you can check this checkbox");
+            toolTipDuplicateKey.SetToolTip(ignoreDuplicateKey, "ignore warning data/row already exist. If your mysql database target already has several same data with firebird source database you can check this checkbox");
+            toolTipDuplicateKey.SetToolTip(forceModeCheckBox, "ignore all exception");
             var config = System.IO.File.ReadAllText("./config.json");
             dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(config);
-            Console.WriteLine(result["target"]);
             pathSource.Text = result["source"]["path"];
             usernameSource.Text = result["source"]["username"];
             passwordSource.Text = result["source"]["password"];
@@ -44,13 +47,26 @@ namespace migrationTool
         FbCommand cmd;
         FbDataReader readerFB;
         float progress = 0f;
+        string Log = "";
         void openConnection()
         {
+            changeLog("Opening NYSQL Connection");
 
             connMysql = new MySqlConnection(
                 $"Server={ipTarget.Text};user={usernameTarget.Text};database={databaseTarget.Text};password={passwordTarget.Text}"
                 );
+            try
+            {
             connMysql.Open();
+
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Open Connection MYSQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine(ex.Message);
+            }
+            changeLog("sucess Open MYSQL Connection");
+
             backgroundWorker1.ReportProgress((int)(progress+=3));
             csb = new FbConnectionStringBuilder();
             csb.Database = pathSource.Text;
@@ -59,7 +75,20 @@ namespace migrationTool
             csb.UserID = usernameSource.Text;
             csb.Password = passwordSource.Text;
             connFB = new FbConnection(csb.ToString());
+            changeLog("Opening Open Firebird Connection");
+            try
+            {
             connFB.Open();
+
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error Open Connection Firebird", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine(ex.Message);
+
+            }
+            changeLog("sucess Open MYSQL Connection");
+
             backgroundWorker1.ReportProgress((int)(progress += 3));
 
 
@@ -68,16 +97,25 @@ namespace migrationTool
         List<string> getAllTableList()
         {
             List<string> tableList = new List<string>();
+            changeLog("preparing table list query");
+
             cmd = new FbCommand(
              "SELECT a.RDB$RELATION_NAME " +
              "FROM RDB$RELATIONS a " +
              "WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$RELATION_TYPE = 0"
              , connFB);
+
             readerFB = cmd.ExecuteReader();
+            changeLog("executed reader");
+
             while (readerFB.Read())
             {
+                changeLog($"read Tabel List Firebird: {readerFB.GetString(0).Replace(" ","")}");
+
                 tableList.Add(readerFB.GetString(0).Replace(" ",""));
             }
+            changeLog("Done fetching table names");
+
             return tableList;
 
 
@@ -108,6 +146,7 @@ namespace migrationTool
         }
         List<string> columnDesc(string tableName)
         {
+
             string sql =
                 "SELECT "
 +"  RF.RDB$FIELD_NAME FIELD_NAME, "
@@ -181,13 +220,11 @@ namespace migrationTool
             FbCommand query = new FbCommand(sql, connFB);
             FbDataReader reader = query.ExecuteReader();
             List<string> columns =new  List<string>();
-            if (tableName == "REGPERKIRAAN")
-            {
-                Console.WriteLine("stop!");
-            }
             while (reader.Read())
             {
-                    var null_status = reader.GetString(2) != null ? reader.GetString(2) : string.Empty;
+                changeLog($"get column's {tableName} types {reader.GetString(0).Replace(" ", "")} {reader.GetString(1).Replace(" ", "")} ");
+
+                var null_status = reader.GetString(2) != null ? reader.GetString(2) : string.Empty;
                     columns.Add($"{reader.GetString(0).Replace(" ","")} {reader.GetString(1).Replace(" ","")} {null_status}");
                   
                     //columns.Append(reader.GetString(1));
@@ -200,7 +237,10 @@ namespace migrationTool
         }
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            changeLog("Opening Connection");
             openConnection();
+
+            changeLog("getting Tabel List");
             List<string> tableList = getAllTableList();
             backgroundWorker1.ReportProgress((int)( progress += 3f));
             Dictionary<string, List<string>> TableDesc = new Dictionary<string, List<string>>();
@@ -211,6 +251,8 @@ namespace migrationTool
             float progressDelta = (totalProgress * 1f/columnCount )-  (totalProgress * 0f / columnCount);
             tableList.ForEach((tableName) =>
             {
+                changeLog($"get column and data type of table {tableName}");
+
                 TableDesc.Add(tableName,columnDesc(tableName));
                 backgroundWorker1.ReportProgress((int) (progress += progressDelta));
                 
@@ -224,13 +266,7 @@ namespace migrationTool
             tableList.ForEach((tableName) =>
             {
                 List<string> columnsThatHasPrimaryKey = getPrimaryKeys(tableName);
-                Console.WriteLine("\n");
-                Console.WriteLine(tableName.ToUpper());
-                if (tableName == "REGPERKIRAAN")
-                {
-                    Console.WriteLine("stop!");
-                    Console.WriteLine(TableDesc[tableName].Count);
-                }
+              
                 //iterasi tiap kolom pada tabelName
                 int primaryKeyCounter = 0;
                 for (int i = 0; i < TableDesc[tableName].Count; i++)
@@ -268,7 +304,6 @@ namespace migrationTool
                             }
                         }
                     }
-                    Console.WriteLine(TableDesc[tableName][i]);
                   
                 }
                 lastIndexColumn = TableDesc[tableName].Count - 1;
@@ -291,55 +326,114 @@ namespace migrationTool
             insertTables(TableDesc, progressDelta);
             //Console.WriteLine(TableDesc);
         }
+        private void InsertTableChildThread(string namaTabel)
+        {
+
+        }
         private void insertTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
         {
+            int index = 0;
             foreach(var table in tableDesc)
             {
 
+
+                Console.WriteLine(table.Key);
                 FbCommand queryFB = new FbCommand($"SELECT * FROM {table.Key}", connFB);
                 var reader = queryFB.ExecuteReader();
                 var result = "";
+                Thread thr = new Thread(()=>InsertTableChildThread());
+                thr.Start();
                 while (reader.Read())
                 {
                     string sqlMysql = $"INSERT INTO {table.Key} VALUES(";
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
-                        Console.WriteLine(reader.GetDataTypeName(i));
                         if(reader.GetDataTypeName(i).ToUpper() == "VARCHAR"|| reader.GetDataTypeName(i).ToUpper() == "CHAR")
                         {
-                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"'{reader.GetString(i)}'" : "null";
+                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"`{reader.GetString(i)}`" : "null";
                             sqlMysql += $"{result},";
                             continue;
                         }
                         if(reader.GetDataTypeName(i).ToUpper() == "DATETIME" || reader.GetDataTypeName(i).ToUpper() == "DATE" || reader.GetDataTypeName(i).ToUpper() == "TIMESTAMP")
                         {
-                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"'{reader.GetString(i)}'" : "null";
+                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"`{reader.GetString(i)}`" : "null";
                             
-                            sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
+                           
+                                if (result == "null")
+                                {
+                                    sqlMysql += $"{result},"; //`20/02/2010 00:00:00`
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        DateTime dateTime = DateTime.ParseExact(result.Replace("'",""), "dd/MM/yyyy HH:mm:ss", null);
+                                        if (dateTime.Year >= 2999||dateTime.Year <= 1000)
+                                        {
+                                            if (forceModeCheckBox.Checked)
+                                            {
+                                                result = "null";
+                                            }
+                                            else
+                                            {
+                                                throw new Exception("incorrect Year");
+
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        MessageBox.Show($"{ex.Message}\n\n{result}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}", "Error Parse date", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        Console.WriteLine($"{ex.Message}\n\n{result}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}");
+                                    }
+
+                                    if (result != "null")
+                                    {
+                                        sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
+                                    }
+                                    else
+                                    {
+                                        sqlMysql += $"{result},"; //'20/02/2010 00:00:00'
+
+                                    }
+                                }
+
+                         
                             continue;
                         }
                         if (reader.GetDataTypeName(i).ToUpper() == "DECIMAL" || reader.GetDataTypeName(i).ToUpper() == "NUMERIC" )
                         {
                             decimal resultDecimal;
-                            if(reader.GetDecimal(i) != null)
+                            try
                             {
-                                resultDecimal = reader.GetDecimal(i);
-                                sqlMysql += $"{resultDecimal},";
+                                if(reader.GetDecimal(i) != null)
+                                {
+                                    resultDecimal = reader.GetDecimal(i);
+                                    sqlMysql += $"{resultDecimal.ToString().Replace(',','.')},";
+                                }
+                                else
+                                {
+                                    sqlMysql += $"null,";
+                                }
+
                             }
-                            else
+                            catch(Exception ex)
                             {
+                                if(!forceModeCheckBox.Checked)
+                                    MessageBox.Show($"{ex.Message} \ndataString: {reader.GetString(i)}","Error Parsing To Decimal", MessageBoxButtons.OK,MessageBoxIcon.Error);
                                 sqlMysql += $"null,";
+                                Console.WriteLine($"{ex.Message} \ndataString: {reader.GetString(i)}");
+
                             }
                             continue;
                         }
-                        result = reader.GetString(i) == null || reader.GetString(i) != null ? reader.GetString(i) : "null";
+                        result = reader.GetString(i) != null && reader.GetString(i) !=string.Empty ? reader.GetString(i) : "null";
                         sqlMysql += $"{result},";
                     }
                     StringBuilder sb = new StringBuilder(sqlMysql);
                     sb[sqlMysql.Length - 1] = ' ';
                     sqlMysql = sb.ToString();
                     sqlMysql += ")";
-                    Console.WriteLine(sqlMysql);
                     try
                     {
                     MySqlCommand queryMySql = new MySqlCommand(sqlMysql, connMysql);
@@ -348,12 +442,35 @@ namespace migrationTool
                     }
                     catch(Exception ex)
                     {
-                        MessageBox.Show($"{ex.Message} \n {sqlMysql}","Data Mismatch!",MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        Application.Exit();
+                        if (ignoreDuplicateKey.Checked)
+                        {
+                            if (ex.Message.ToLower().IndexOf("duplicate entry") > -1)
+                            {
+                                changeLog($"Duplicate Entry, Skipping {sqlMysql}");
+                            }
+                            else
+                            {
+                                if (!forceModeCheckBox.Checked)
+                                {
+                                    MessageBox.Show($"{ex.Message} \n {sqlMysql}","Data Mismatch!",MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    Application.Exit();
+
+                                }
+                                Console.WriteLine($"{ex.Message} \n {sqlMysql}");
+
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show($"{ex.Message} \n {sqlMysql}", "Data Mismatch!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Application.Exit();
+                        }
+                        Console.WriteLine($"{ex.Message} \n {sqlMysql}");
                     }
                 }
                 backgroundWorker1.ReportProgress((int)(progress+=progressDelta));
-                Console.Read();
+                index++;
+                Console.WriteLine($"{index}/{tableDesc.Count}");
             }
         }
         private void createTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
@@ -373,7 +490,6 @@ namespace migrationTool
                 }
                 sql += ");";
                 countTable++;
-                Console.WriteLine(sql);
                 try
                 {
                   MySqlCommand query = new MySqlCommand(sql, connMysql);
@@ -382,22 +498,55 @@ namespace migrationTool
                 }
                 catch(Exception EX)
                 {
-                    MessageBox.Show((EX.Message));
+                    if (!ignoreExistCheckBox.Checked)
+                    {
+                        MessageBox.Show((EX.Message),$"Error Create Table {table.Key}",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                        Application.Exit();
+                    }
+                    Console.WriteLine(EX.Message);
                 }
-                Console.WriteLine(countTable);
                 backgroundWorker1.ReportProgress((int)(progress+=progressDelta));
             };
-            Console.WriteLine($"total: {tableDesc.Count}");
         }
         private void button1_Click(object sender, EventArgs e)
         {
             progress = 0f;
             backgroundWorker1.RunWorkerAsync();
         }
-
+        string tempLog = "";
+        private void changeLog(string log)
+        {
+            tempLog = log;
+            backgroundWorker1.ReportProgress((int)progress);
+        }
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             progressBar1.Value = e.ProgressPercentage;
+            LogForm.changePercentageProgress(e.ProgressPercentage);
+            logLabel.Text = tempLog;
+            LogForm.appendLog(tempLog);
+
+        }
+        Log LogForm = new Log();
+        private void showLog_Click(object sender, EventArgs e)
+        {
+            LogForm.ShowDialog();
+
+        }
+
+        private void checkBox1_Click(object sender, EventArgs e)
+        {
+            if (forceModeCheckBox.Checked)
+            {
+                ignoreDuplicateKey.Checked = true;
+                ignoreExistCheckBox.Checked = true;
+            }
+            else
+            {
+                ignoreDuplicateKey.Checked = false;
+                ignoreExistCheckBox.Checked = false;
+
+            }
         }
     }
 }

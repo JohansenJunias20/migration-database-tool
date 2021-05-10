@@ -50,18 +50,23 @@ namespace migrationTool
             this.usernameSource = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.pathSource = new System.Windows.Forms.TextBox();
-            this.statusLabel = new System.Windows.Forms.Label();
+            this.logLabel = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.ignoreExistCheckBox = new System.Windows.Forms.CheckBox();
             this.toolTip2 = new System.Windows.Forms.ToolTip(this.components);
+            this.showLog = new System.Windows.Forms.Button();
+            this.ignoreDuplicateKey = new System.Windows.Forms.CheckBox();
+            this.toolTipDuplicateKey = new System.Windows.Forms.ToolTip(this.components);
+            this.forceModeCheckBox = new System.Windows.Forms.CheckBox();
+            this.forceModeTip = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(120, 324);
+            this.progressBar1.Location = new System.Drawing.Point(120, 273);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(532, 23);
             this.progressBar1.TabIndex = 0;
@@ -76,7 +81,7 @@ namespace migrationTool
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(131, 139);
+            this.label1.Location = new System.Drawing.Point(131, 96);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(38, 13);
             this.label1.TabIndex = 3;
@@ -94,7 +99,7 @@ namespace migrationTool
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.ipTarget);
-            this.groupBox1.Location = new System.Drawing.Point(395, 85);
+            this.groupBox1.Location = new System.Drawing.Point(395, 42);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(340, 213);
             this.groupBox1.TabIndex = 4;
@@ -183,7 +188,7 @@ namespace migrationTool
             this.groupBox2.Controls.Add(this.usernameSource);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Controls.Add(this.pathSource);
-            this.groupBox2.Location = new System.Drawing.Point(50, 85);
+            this.groupBox2.Location = new System.Drawing.Point(50, 42);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(310, 213);
             this.groupBox2.TabIndex = 12;
@@ -238,14 +243,14 @@ namespace migrationTool
             this.pathSource.Size = new System.Drawing.Size(174, 20);
             this.pathSource.TabIndex = 1;
             // 
-            // statusLabel
+            // logLabel
             // 
-            this.statusLabel.AutoSize = true;
-            this.statusLabel.Location = new System.Drawing.Point(122, 353);
-            this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(38, 13);
-            this.statusLabel.TabIndex = 13;
-            this.statusLabel.Text = "Ready";
+            this.logLabel.AutoSize = true;
+            this.logLabel.Location = new System.Drawing.Point(122, 302);
+            this.logLabel.Name = "logLabel";
+            this.logLabel.Size = new System.Drawing.Size(38, 13);
+            this.logLabel.TabIndex = 13;
+            this.logLabel.Text = "Ready";
             // 
             // button1
             // 
@@ -280,14 +285,48 @@ namespace migrationTool
             this.toolTip2.InitialDelay = 100;
             this.toolTip2.ReshowDelay = 20;
             // 
+            // showLog
+            // 
+            this.showLog.Location = new System.Drawing.Point(577, 302);
+            this.showLog.Name = "showLog";
+            this.showLog.Size = new System.Drawing.Size(75, 23);
+            this.showLog.TabIndex = 16;
+            this.showLog.Text = "show log";
+            this.showLog.UseVisualStyleBackColor = true;
+            this.showLog.Click += new System.EventHandler(this.showLog_Click);
+            // 
+            // ignoreDuplicateKey
+            // 
+            this.ignoreDuplicateKey.AutoSize = true;
+            this.ignoreDuplicateKey.Location = new System.Drawing.Point(307, 367);
+            this.ignoreDuplicateKey.Name = "ignoreDuplicateKey";
+            this.ignoreDuplicateKey.Size = new System.Drawing.Size(154, 17);
+            this.ignoreDuplicateKey.TabIndex = 17;
+            this.ignoreDuplicateKey.Text = "Ignore Insert Duplicate Key";
+            this.ignoreDuplicateKey.UseVisualStyleBackColor = true;
+            // 
+            // forceModeCheckBox
+            // 
+            this.forceModeCheckBox.AutoSize = true;
+            this.forceModeCheckBox.Location = new System.Drawing.Point(338, 344);
+            this.forceModeCheckBox.Name = "forceModeCheckBox";
+            this.forceModeCheckBox.Size = new System.Drawing.Size(83, 17);
+            this.forceModeCheckBox.TabIndex = 18;
+            this.forceModeCheckBox.Text = "Force Mode";
+            this.forceModeCheckBox.UseVisualStyleBackColor = true;
+            this.forceModeCheckBox.Click += new System.EventHandler(this.checkBox1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.forceModeCheckBox);
+            this.Controls.Add(this.ignoreDuplicateKey);
+            this.Controls.Add(this.showLog);
             this.Controls.Add(this.ignoreExistCheckBox);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.statusLabel);
+            this.Controls.Add(this.logLabel);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label1);
@@ -318,7 +357,7 @@ namespace migrationTool
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox pathSource;
-        private System.Windows.Forms.Label statusLabel;
+        private System.Windows.Forms.Label logLabel;
         private System.Windows.Forms.Button button1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.TextBox passwordTarget;
@@ -331,6 +370,11 @@ namespace migrationTool
         private System.Windows.Forms.TextBox usernameSource;
         private System.Windows.Forms.CheckBox ignoreExistCheckBox;
         private System.Windows.Forms.ToolTip toolTip2;
+        private System.Windows.Forms.Button showLog;
+        private System.Windows.Forms.CheckBox ignoreDuplicateKey;
+        private System.Windows.Forms.ToolTip toolTipDuplicateKey;
+        private System.Windows.Forms.CheckBox forceModeCheckBox;
+        private System.Windows.Forms.ToolTip forceModeTip;
     }
 }
 
