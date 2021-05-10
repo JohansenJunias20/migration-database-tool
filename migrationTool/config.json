@@ -1,0 +1,7 @@
+﻿{
+  "source": "C:/data/DATABASE.FDB"
+  "target": {
+    "ip": "localhost",
+    "port": "3306",
+    "database": "hm"
+  }
