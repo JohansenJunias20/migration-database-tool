@@ -1,6 +1,6 @@
 ﻿{
   "source": {
-    "path": "localhost:C:/superhitechsda/data/DATABASE.FDB",
+    "path": "D:/superhitechsda/data/DATABASE.FDB",
     "username": "sysdba",
     "password": "masterkey"
   },

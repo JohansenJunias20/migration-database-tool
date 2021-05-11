@@ -17,6 +17,7 @@ namespace migrationTool
 {
     public partial class Form1 : Form
     {
+        dynamic config;
         public Form1()
         {
             InitializeComponent();
@@ -25,10 +26,10 @@ namespace migrationTool
             toolTipDuplicateKey.SetToolTip(forceModeCheckBox, "ignore all exception");
             var config = System.IO.File.ReadAllText("./config.json");
             dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(config);
+            this.config = result;
             pathSource.Text = result["source"]["path"];
             usernameSource.Text = result["source"]["username"];
             passwordSource.Text = result["source"]["password"];
-
             ipTarget.Text = result["target"]["ip"];
             portTarget.Text = result["target"]["port"];
             usernameTarget.Text = result["target"]["username"];
@@ -175,7 +176,7 @@ namespace migrationTool
 +"        WHEN 2 THEN 'DECIMAL' "
 +"      END "
 +"    WHEN 27 THEN 'DOUBLE' "
-+"    WHEN 35 THEN 'TIMESTAMP' "
++"    WHEN 35 THEN 'DATETIME' "
 +"    WHEN 37 THEN 'VARCHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
 +"    WHEN 40 THEN 'CSTRING' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
 +"    WHEN 45 THEN 'BLOB_ID' "
@@ -330,49 +331,70 @@ namespace migrationTool
         {
 
         }
+        FbDataReader sqlReader;
         private void insertTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
         {
             int index = 0;
-            foreach(var table in tableDesc)
+            MySqlCommand queryMySql = new MySqlCommand("",connMysql);
+            bool startNow = false;
+            foreach (var table in tableDesc)
             {
-
-
+                //if(config.source.start !=null)
+                //    if(table.Key.ToUpper() == start)
+                //    {
+                //        startNow = true;
+                //    }
+                //if (!startNow)
+                //{
+                //    changeLog($"Skipping {table.Key}");
+                //    continue;
+                //}
                 Console.WriteLine(table.Key);
+                changeLog($"Inserting Table {table.Key}");
                 FbCommand queryFB = new FbCommand($"SELECT * FROM {table.Key}", connFB);
+                //queryFB.Parameters.Add("@test", "");
                 var reader = queryFB.ExecuteReader();
                 var result = "";
-                Thread thr = new Thread(()=>InsertTableChildThread());
-                thr.Start();
+                int counterRow = 0;
                 while (reader.Read())
                 {
                     string sqlMysql = $"INSERT INTO {table.Key} VALUES(";
+                    List<object> fieldValue = new List<object>();
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
+
                         if(reader.GetDataTypeName(i).ToUpper() == "VARCHAR"|| reader.GetDataTypeName(i).ToUpper() == "CHAR")
                         {
-                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"`{reader.GetString(i)}`" : "null";
-                            sqlMysql += $"{result},";
+                            //result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"'{reader.GetString(i).Replace("'","''")}'" : "null";
+                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"{reader.GetString(i)}" : null;
+                            //sqlMysql += $"{result},";
+                            sqlMysql += $"@param{i},";
+                            fieldValue.Add(result);
                             continue;
                         }
                         if(reader.GetDataTypeName(i).ToUpper() == "DATETIME" || reader.GetDataTypeName(i).ToUpper() == "DATE" || reader.GetDataTypeName(i).ToUpper() == "TIMESTAMP")
                         {
-                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"`{reader.GetString(i)}`" : "null";
-                            
-                           
-                                if (result == "null")
+                            //result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"\"{reader.GetString(i)}\"" : "null";
+                            result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"{reader.GetString(i)}" : null;
+
+                            //if (result == "null")
+                            if (result == null)
                                 {
-                                    sqlMysql += $"{result},"; //`20/02/2010 00:00:00`
-                                }
-                                else
+                                    sqlMysql += $"@param{i},";
+                                    fieldValue.Add(null);
+
+                                //sqlMysql += $"{result},"; //\"20/02/2010 00:00:00\"
+                            }
+                            else
                                 {
                                     try
                                     {
-                                        DateTime dateTime = DateTime.ParseExact(result.Replace("'",""), "dd/MM/yyyy HH:mm:ss", null);
+                                        DateTime dateTime = DateTime.ParseExact(result.Replace("\"",""), "dd/MM/yyyy HH:mm:ss", null);
                                         if (dateTime.Year >= 2999||dateTime.Year <= 1000)
                                         {
                                             if (forceModeCheckBox.Checked)
                                             {
-                                                result = "null";
+                                                result = null;
                                             }
                                             else
                                             {
@@ -383,17 +405,33 @@ namespace migrationTool
                                     }
                                     catch (Exception ex)
                                     {
-                                        MessageBox.Show($"{ex.Message}\n\n{result}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}", "Error Parse date", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        Console.WriteLine($"{ex.Message}\n\n{result}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}");
+                                        Console.WriteLine($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}");
+                                        MessageBox.Show($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}", "Error Parse date", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     }
 
-                                    if (result != "null")
+                                    if (result != null)
                                     {
-                                        sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
+
+                                        fieldValue.Add(result);
+                                        if (result.IndexOf("-") != -1)
+                                        {
+                                            sqlMysql += $"STR_TO_DATE(@param{i},'%d-%m-%Y %H:%i:%S' ),";
+                                            Console.WriteLine("contain -");
+
+                                        }
+                                        else
+                                        {
+                                            sqlMysql += $"STR_TO_DATE(@param{i},'%d/%m/%Y %H:%i:%S' ),";
+
+                                        }
+                                            //sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
                                     }
                                     else
                                     {
-                                        sqlMysql += $"{result},"; //'20/02/2010 00:00:00'
+                                        fieldValue.Add(null);
+                                        sqlMysql += $"@param{i},";
+
+                                    //sqlMysql += $"{result},"; //'20/02/2010 00:00:00'
 
                                     }
                                 }
@@ -409,11 +447,15 @@ namespace migrationTool
                                 if(reader.GetDecimal(i) != null)
                                 {
                                     resultDecimal = reader.GetDecimal(i);
-                                    sqlMysql += $"{resultDecimal.ToString().Replace(',','.')},";
+                                    //sqlMysql += $"{resultDecimal.ToString().Replace(',','.')},";
+                                    fieldValue.Add(resultDecimal.ToString().Replace(',', '.'));
+                                    sqlMysql += $"@param{i},";
+
                                 }
                                 else
                                 {
-                                    sqlMysql += $"null,";
+                                    fieldValue.Add(null);
+                                    sqlMysql += $"@param{i},";
                                 }
 
                             }
@@ -421,14 +463,18 @@ namespace migrationTool
                             {
                                 if(!forceModeCheckBox.Checked)
                                     MessageBox.Show($"{ex.Message} \ndataString: {reader.GetString(i)}","Error Parsing To Decimal", MessageBoxButtons.OK,MessageBoxIcon.Error);
-                                sqlMysql += $"null,";
-                                Console.WriteLine($"{ex.Message} \ndataString: {reader.GetString(i)}");
+
+                                fieldValue.Add(null);
+                                sqlMysql += $"@param{i},";
+                                //Console.WriteLine($"{ex.Message} \ndataString: {reader.GetString(i)}");
 
                             }
                             continue;
                         }
-                        result = reader.GetString(i) != null && reader.GetString(i) !=string.Empty ? reader.GetString(i) : "null";
-                        sqlMysql += $"{result},";
+
+                        result = reader.GetString(i) != null && reader.GetString(i) !=string.Empty ? reader.GetString(i) : null;
+                        fieldValue.Add(result);
+                        sqlMysql += $"@param{i},";
                     }
                     StringBuilder sb = new StringBuilder(sqlMysql);
                     sb[sqlMysql.Length - 1] = ' ';
@@ -436,17 +482,29 @@ namespace migrationTool
                     sqlMysql += ")";
                     try
                     {
-                    MySqlCommand queryMySql = new MySqlCommand(sqlMysql, connMysql);
-                    var res = queryMySql.ExecuteNonQuery();
+                        queryMySql.CommandText = sqlMysql;
+                        counterRow++;
+                        if (counterRow % 10 == 0)
+                        {
+                            changeLog($"inserted {counterRow} row(s) of {table.Key}");
+                        }
+                        queryMySql.Parameters.Clear();
+                        for (int j = 0; j < fieldValue.Count; j++)
+                        {
+                            queryMySql.Parameters.AddWithValue($"@param{j}", fieldValue[j]);
+                            //queryMySql.Parameters.AddWithValue("","");
+                        }
+                        var res = queryMySql.ExecuteNonQuery();
 
                     }
                     catch(Exception ex)
                     {
                         if (ignoreDuplicateKey.Checked)
                         {
-                            if (ex.Message.ToLower().IndexOf("duplicate entry") > -1)
+                            if (ex.Message.ToLower().IndexOf("duplicate") != -1)
                             {
-                                changeLog($"Duplicate Entry, Skipping {sqlMysql}");
+                                //changeLog($"Duplicate Entry, Skipping {sqlMysql}");
+                                //Console.WriteLine($"Duplicate Entry, Skipping {sqlMysql}");
                             }
                             else
                             {
@@ -457,6 +515,11 @@ namespace migrationTool
 
                                 }
                                 Console.WriteLine($"{ex.Message} \n {sqlMysql}");
+                                for (int j = 0; j < fieldValue.Count; j++)
+                                {
+                                    Console.WriteLine(fieldValue[j]);
+                                }
+                                //Console.WriteLine($"{ex.Message} \n {sqlMysql}");
 
                             }
                         }
@@ -465,13 +528,15 @@ namespace migrationTool
                             MessageBox.Show($"{ex.Message} \n {sqlMysql}", "Data Mismatch!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             Application.Exit();
                         }
-                        Console.WriteLine($"{ex.Message} \n {sqlMysql}");
+                        //Console.WriteLine($"{ex.Message} \n {sqlMysql}");
                     }
                 }
                 backgroundWorker1.ReportProgress((int)(progress+=progressDelta));
                 index++;
-                Console.WriteLine($"{index}/{tableDesc.Count}");
+                //Console.WriteLine($"{index}/{tableDesc.Count}");
+                changeLog($"{index}/{tableDesc.Count}");
             }
+            backgroundWorker1.ReportProgress(100);
         }
         private void createTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
         {
@@ -547,6 +612,21 @@ namespace migrationTool
                 ignoreExistCheckBox.Checked = false;
 
             }
+        }
+
+        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        {
+
+        }
+
+        private void backgroundWorker2_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

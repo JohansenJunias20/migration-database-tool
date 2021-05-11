@@ -60,6 +60,7 @@ namespace migrationTool
             this.toolTipDuplicateKey = new System.Windows.Forms.ToolTip(this.components);
             this.forceModeCheckBox = new System.Windows.Forms.CheckBox();
             this.forceModeTip = new System.Windows.Forms.ToolTip(this.components);
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -316,11 +317,17 @@ namespace migrationTool
             this.forceModeCheckBox.UseVisualStyleBackColor = true;
             this.forceModeCheckBox.Click += new System.EventHandler(this.checkBox1_Click);
             // 
+            // backgroundWorker2
+            // 
+            this.backgroundWorker2.WorkerReportsProgress = true;
+            this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
+            this.backgroundWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker2_ProgressChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1056, 450);
             this.Controls.Add(this.forceModeCheckBox);
             this.Controls.Add(this.ignoreDuplicateKey);
             this.Controls.Add(this.showLog);
@@ -375,6 +382,7 @@ namespace migrationTool
         private System.Windows.Forms.ToolTip toolTipDuplicateKey;
         private System.Windows.Forms.CheckBox forceModeCheckBox;
         private System.Windows.Forms.ToolTip forceModeTip;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
     }
 }
 
