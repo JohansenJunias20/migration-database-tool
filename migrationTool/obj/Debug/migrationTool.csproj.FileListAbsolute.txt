@@ -37,3 +37,4 @@ C:\Users\c1419\source\repos\migrationTool\migrationTool\obj\Debug\migrationTool.
 C:\Users\c1419\source\repos\migrationTool\migrationTool\obj\Debug\migrationTool.exe
 C:\Users\c1419\source\repos\migrationTool\migrationTool\obj\Debug\migrationTool.pdb
 C:\Users\c1419\source\repos\migrationTool\migrationTool\obj\Debug\migrationTool.Log.resources
+C:\Users\c1419\source\repos\migrationTool\migrationTool\obj\Debug\migrationTool.ListTablesViews.resources

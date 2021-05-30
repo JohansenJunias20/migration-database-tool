@@ -58,17 +58,17 @@ namespace migrationTool
                 );
             try
             {
-            connMysql.Open();
+                connMysql.Open();
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error Open Connection MYSQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Console.WriteLine(ex.Message);
             }
             changeLog("sucess Open MYSQL Connection");
 
-            backgroundWorker1.ReportProgress((int)(progress+=3));
+            backgroundWorker1.ReportProgress((int)(progress += 3));
             csb = new FbConnectionStringBuilder();
             csb.Database = pathSource.Text;
             csb.DataSource = "localhost";
@@ -79,10 +79,10 @@ namespace migrationTool
             changeLog("Opening Open Firebird Connection");
             try
             {
-            connFB.Open();
+                connFB.Open();
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error Open Connection Firebird", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Console.WriteLine(ex.Message);
@@ -111,9 +111,9 @@ namespace migrationTool
 
             while (readerFB.Read())
             {
-                changeLog($"read Tabel List Firebird: {readerFB.GetString(0).Replace(" ","")}");
+                changeLog($"read Tabel List Firebird: {readerFB.GetString(0).Replace(" ", "")}");
 
-                tableList.Add(readerFB.GetString(0).Replace(" ",""));
+                tableList.Add(readerFB.GetString(0).Replace(" ", ""));
             }
             changeLog("Done fetching table names");
 
@@ -141,7 +141,7 @@ namespace migrationTool
             List<string> result = new List<string>();
             while (reader.Read())
             {
-                result.Add(reader.GetString(0).Replace(" ",""));
+                result.Add(reader.GetString(0).Replace(" ", ""));
             }
             return result;
         }
@@ -150,90 +150,90 @@ namespace migrationTool
 
             string sql =
                 "SELECT "
-+"  RF.RDB$FIELD_NAME FIELD_NAME, "
-+"  CASE F.RDB$FIELD_TYPE "
-+"    WHEN 7 THEN "
-+"      CASE F.RDB$FIELD_SUB_TYPE "
-+"        WHEN 0 THEN 'SMALLINT' "
-+"        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
-+"        WHEN 2 THEN 'DECIMAL' "
-+"      END "
-+"    WHEN 8 THEN "
-+"      CASE F.RDB$FIELD_SUB_TYPE "
-+"        WHEN 0 THEN 'INTEGER' "
-+"        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
-+"        WHEN 2 THEN 'DECIMAL' "
-+"      END "
-+"    WHEN 9 THEN 'QUAD' "
-+"    WHEN 10 THEN 'FLOAT' "
-+"    WHEN 12 THEN 'DATE' "
-+"    WHEN 13 THEN 'TIME' "
-+"    WHEN 14 THEN 'CHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ') ' "
-+"    WHEN 16 THEN "
-+"      CASE F.RDB$FIELD_SUB_TYPE "
-+"        WHEN 0 THEN 'BIGINT' "
-+"        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
-+"        WHEN 2 THEN 'DECIMAL' "
-+"      END "
-+"    WHEN 27 THEN 'DOUBLE' "
-+"    WHEN 35 THEN 'DATETIME' "
-+"    WHEN 37 THEN 'VARCHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
-+"    WHEN 40 THEN 'CSTRING' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
-+"    WHEN 45 THEN 'BLOB_ID' "
++ "  RF.RDB$FIELD_NAME FIELD_NAME, "
++ "  CASE F.RDB$FIELD_TYPE "
++ "    WHEN 7 THEN "
++ "      CASE F.RDB$FIELD_SUB_TYPE "
++ "        WHEN 0 THEN 'SMALLINT' "
++ "        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
++ "        WHEN 2 THEN 'DECIMAL' "
++ "      END "
++ "    WHEN 8 THEN "
++ "      CASE F.RDB$FIELD_SUB_TYPE "
++ "        WHEN 0 THEN 'INTEGER' "
++ "        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
++ "        WHEN 2 THEN 'DECIMAL' "
++ "      END "
++ "    WHEN 9 THEN 'QUAD' "
++ "    WHEN 10 THEN 'FLOAT' "
++ "    WHEN 12 THEN 'DATE' "
++ "    WHEN 13 THEN 'TIME' "
++ "    WHEN 14 THEN 'CHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ') ' "
++ "    WHEN 16 THEN "
++ "      CASE F.RDB$FIELD_SUB_TYPE "
++ "        WHEN 0 THEN 'BIGINT' "
++ "        WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')' "
++ "        WHEN 2 THEN 'DECIMAL' "
++ "      END "
++ "    WHEN 27 THEN 'DOUBLE' "
++ "    WHEN 35 THEN 'DATETIME' "
++ "    WHEN 37 THEN 'VARCHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
++ "    WHEN 40 THEN 'CSTRING' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')' "
++ "    WHEN 45 THEN 'BLOB_ID' "
 + "    WHEN 261 THEN 'LONGBLOB '  "
 + "    ELSE 'RDB$FIELD_TYPE: ' || F.RDB$FIELD_TYPE || '?' "
-+"  END FIELD_TYPE, "
-+"  IIF(COALESCE(RF.RDB$NULL_FLAG, 0) = 0, NULL, 'NOT NULL') FIELD_NULL, "
-+"  CH.RDB$CHARACTER_SET_NAME FIELD_CHARSET, "
-+"  DCO.RDB$COLLATION_NAME FIELD_COLLATION, "
-+"  COALESCE(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) FIELD_DEFAULT, "
-+"  F.RDB$VALIDATION_SOURCE FIELD_CHECK, "
-+"  RF.RDB$DESCRIPTION FIELD_DESCRIPTION "
-+"FROM RDB$RELATION_FIELDS RF "
-+"JOIN RDB$FIELDS F ON(F.RDB$FIELD_NAME = RF.RDB$FIELD_SOURCE) "
-+"LEFT OUTER JOIN RDB$CHARACTER_SETS CH ON(CH.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID) "
-+"LEFT OUTER JOIN RDB$COLLATIONS DCO ON((DCO.RDB$COLLATION_ID = F.RDB$COLLATION_ID) AND(DCO.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID)) "
-+$"WHERE(RF.RDB$RELATION_NAME = '{tableName}') AND(COALESCE(RF.RDB$SYSTEM_FLAG, 0) = 0) "
-+"ORDER BY RF.RDB$FIELD_POSITION; "
++ "  END FIELD_TYPE, "
++ "  IIF(COALESCE(RF.RDB$NULL_FLAG, 0) = 0, NULL, 'NOT NULL') FIELD_NULL, "
++ "  CH.RDB$CHARACTER_SET_NAME FIELD_CHARSET, "
++ "  DCO.RDB$COLLATION_NAME FIELD_COLLATION, "
++ "  COALESCE(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) FIELD_DEFAULT, "
++ "  F.RDB$VALIDATION_SOURCE FIELD_CHECK, "
++ "  RF.RDB$DESCRIPTION FIELD_DESCRIPTION "
++ "FROM RDB$RELATION_FIELDS RF "
++ "JOIN RDB$FIELDS F ON(F.RDB$FIELD_NAME = RF.RDB$FIELD_SOURCE) "
++ "LEFT OUTER JOIN RDB$CHARACTER_SETS CH ON(CH.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID) "
++ "LEFT OUTER JOIN RDB$COLLATIONS DCO ON((DCO.RDB$COLLATION_ID = F.RDB$COLLATION_ID) AND(DCO.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID)) "
++ $"WHERE(RF.RDB$RELATION_NAME = '{tableName}') AND(COALESCE(RF.RDB$SYSTEM_FLAG, 0) = 0) "
++ "ORDER BY RF.RDB$FIELD_POSITION; "
 
             ;
-                //"SELECT" +
-                //"  TRIM(rf.rdb$field_name) || ' ' || " +
-                //"  IIF(rdb$field_source LIKE 'RDB$%', " +
-                //"  DECODE(f.rdb$field_type, " +
-                //"    8, 'INTEGER', " +
-                //"    12, 'DATE', " +
-                //"    37, 'VARCHAR', " +
-                //"    14, 'CHAR', " +
-                //"    7, 'SMALLINT'), " +
-                //"  TRIM(rdb$field_source)) || " +
-                //"  IIF((rdb$field_source LIKE 'RDB$%') AND(f.rdb$field_type IN(37, 14)), " +
-                //"    '(' || f.rdb$field_length || ')', " +
-                //"    '') || " +
-                //"  IIF((f.rdb$null_flag = 1) OR(rf.rdb$null_flag = 1),  " +
-                //"    ' NOT NULL', '') " +
-                //"FROM " +
-                //"  rdb$relation_fields rf JOIN rdb$fields f " +
-                //"    ON f.rdb$field_name = rf.rdb$field_source " +
-                //"WHERE " +
-                //$"  rf.rdb$relation_name = '{tableName}'"
-                //;
+            //"SELECT" +
+            //"  TRIM(rf.rdb$field_name) || ' ' || " +
+            //"  IIF(rdb$field_source LIKE 'RDB$%', " +
+            //"  DECODE(f.rdb$field_type, " +
+            //"    8, 'INTEGER', " +
+            //"    12, 'DATE', " +
+            //"    37, 'VARCHAR', " +
+            //"    14, 'CHAR', " +
+            //"    7, 'SMALLINT'), " +
+            //"  TRIM(rdb$field_source)) || " +
+            //"  IIF((rdb$field_source LIKE 'RDB$%') AND(f.rdb$field_type IN(37, 14)), " +
+            //"    '(' || f.rdb$field_length || ')', " +
+            //"    '') || " +
+            //"  IIF((f.rdb$null_flag = 1) OR(rf.rdb$null_flag = 1),  " +
+            //"    ' NOT NULL', '') " +
+            //"FROM " +
+            //"  rdb$relation_fields rf JOIN rdb$fields f " +
+            //"    ON f.rdb$field_name = rf.rdb$field_source " +
+            //"WHERE " +
+            //$"  rf.rdb$relation_name = '{tableName}'"
+            //;
             FbCommand query = new FbCommand(sql, connFB);
             FbDataReader reader = query.ExecuteReader();
-            List<string> columns =new  List<string>();
+            List<string> columns = new List<string>();
             while (reader.Read())
             {
                 changeLog($"get column's {tableName} types {reader.GetString(0).Replace(" ", "")} {reader.GetString(1).Replace(" ", "")} ");
 
                 var null_status = reader.GetString(2) != null ? reader.GetString(2) : string.Empty;
-                    columns.Add($"{reader.GetString(0).Replace(" ","")} {reader.GetString(1).Replace(" ","")} {null_status}");
-                  
-                    //columns.Append(reader.GetString(1));
+                columns.Add($"{reader.GetString(0).Replace(" ", "")} {reader.GetString(1).Replace(" ", "")} {null_status}");
+
+                //columns.Append(reader.GetString(1));
 
                 //result.Add(tableName, reader.GetString(0));
             }
 
-           
+
             return columns;
         }
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -242,100 +242,233 @@ namespace migrationTool
             openConnection();
 
             changeLog("getting Tabel List");
+
+            List<string> views = getAllViews();
             List<string> tableList = getAllTableList();
-            backgroundWorker1.ReportProgress((int)( progress += 3f));
-            Dictionary<string, List<string>> TableDesc = new Dictionary<string, List<string>>();
-
-            //total harus 5%
-            int columnCount = tableList.Count;
-            float totalProgress = 10f;
-            float progressDelta = (totalProgress * 1f/columnCount )-  (totalProgress * 0f / columnCount);
-            tableList.ForEach((tableName) =>
+            ListTablesViews listTablesViewsForm = new ListTablesViews(tableList, views);
+            listTablesViewsForm.ShowDialog();
+            if (listTablesViewsForm.isOK)
             {
-                changeLog($"get column and data type of table {tableName}");
+                tableList = listTablesViewsForm.tables;
+                views = listTablesViewsForm.views;
+                backgroundWorker1.ReportProgress((int)(progress += 3f));
+                Dictionary<string, List<string>> TableDesc = new Dictionary<string, List<string>>();
 
-                TableDesc.Add(tableName,columnDesc(tableName));
-                backgroundWorker1.ReportProgress((int) (progress += progressDelta));
-                
-            });
-
-            //total harus 10%
-            columnCount = tableList.Count;
-            totalProgress = 15f;
-            progressDelta = (totalProgress * 1f / columnCount) - (totalProgress * 0f / columnCount);
-            int lastIndexColumn;
-            tableList.ForEach((tableName) =>
-            {
-                List<string> columnsThatHasPrimaryKey = getPrimaryKeys(tableName);
-              
-                //iterasi tiap kolom pada tabelName
-                int primaryKeyCounter = 0;
-                for (int i = 0; i < TableDesc[tableName].Count; i++)
+                //total harus 10%
+                int columnCount = tableList.Count;
+                float totalProgress = 10f;
+                float progressDelta = (totalProgress * 1f / columnCount) - (totalProgress * 0f / columnCount);
+                tableList.ForEach((tableName) =>
                 {
-                    List<string> primaryKeys = new List<string>();
-                    for (int j = 0; j < columnsThatHasPrimaryKey.Count; j++)
+                    changeLog($"get column and data type of table {tableName}");
+
+                    TableDesc.Add(tableName, columnDesc(tableName));
+                    backgroundWorker1.ReportProgress((int)(progress += progressDelta));
+
+                });
+
+                //MEMBUAT SQL CREATE TABLE COMMAND SYNTAX
+                columnCount = tableList.Count;
+                totalProgress = 10f;
+                progressDelta = (totalProgress * 1f / columnCount) - (totalProgress * 0f / columnCount);
+                int lastIndexColumn;
+
+                tableList.ForEach((tableName) =>
+                {
+                    List<string> columnsThatHasPrimaryKey = getPrimaryKeys(tableName);
+
+                    //iterasi tiap kolom pada tabelName
+                    int primaryKeyCounter = 0;
+                    for (int i = 0; i < TableDesc[tableName].Count; i++)
                     {
-                        var columnPrimaryKey = columnsThatHasPrimaryKey[j];
-                        var currentColumnName = TableDesc[tableName][i].Split(' ')[0];
-                        if (TableDesc[tableName][i].Split(' ')[0] == columnPrimaryKey)
+                        List<string> primaryKeys = new List<string>();
+                        for (int j = 0; j < columnsThatHasPrimaryKey.Count; j++)
                         {
-                            primaryKeyCounter++;
-                            lastIndexColumn = TableDesc[tableName].Count - 1;
-                            if (TableDesc[tableName][lastIndexColumn].IndexOf("primary key") == -1)
+                            var columnPrimaryKey = columnsThatHasPrimaryKey[j];
+                            var currentColumnName = TableDesc[tableName][i].Split(' ')[0];
+                            if (TableDesc[tableName][i].Split(' ')[0] == columnPrimaryKey)
                             {
-                                TableDesc[tableName].Add(" primary key (");
+                                primaryKeyCounter++;
+                                lastIndexColumn = TableDesc[tableName].Count - 1;
+                                if (TableDesc[tableName][lastIndexColumn].IndexOf("primary key") == -1)
+                                {
+                                    TableDesc[tableName].Add(" primary key (");
 
-                            }
-                            lastIndexColumn = TableDesc[tableName].Count - 1;
+                                }
+                                lastIndexColumn = TableDesc[tableName].Count - 1;
 
-                            TableDesc[tableName][lastIndexColumn] += currentColumnName;
-                            if(columnsThatHasPrimaryKey.Count == 1)
-                            {
-                                TableDesc[tableName][lastIndexColumn] += ")";
-                                continue;
+                                TableDesc[tableName][lastIndexColumn] += currentColumnName;
+                                if (columnsThatHasPrimaryKey.Count == 1)
+                                {
+                                    TableDesc[tableName][lastIndexColumn] += ")";
+                                    continue;
+                                }
+                                if (primaryKeyCounter == columnsThatHasPrimaryKey.Count)
+                                {
+                                    TableDesc[tableName][lastIndexColumn] += ")";
+                                }
+                                else
+                                {
+
+                                    TableDesc[tableName][lastIndexColumn] += ", ";
+                                }
                             }
-                            if (primaryKeyCounter == columnsThatHasPrimaryKey.Count)
+                        }
+
+                    }
+                    lastIndexColumn = TableDesc[tableName].Count - 1;
+
+                    //if(TableDesc[tableName][lastIndexColumn].IndexOf("primary key") > -1){
+                    //    TableDesc[tableName][lastIndexColumn] += ")";
+                    //}
+                    backgroundWorker1.ReportProgress((int)(progress += progressDelta));
+
+
+                });
+
+                //CREATE TABLE
+                totalProgress = 20f;
+                int tableCount = TableDesc.Count;
+                progressDelta = (totalProgress * 1f / tableCount) - (totalProgress * 0f / tableCount);
+                createTables(TableDesc, progressDelta);
+
+                //INSERT TABLE
+                totalProgress = 40f;
+                progressDelta = (totalProgress * 1f / tableCount) - (totalProgress * 0f / tableCount);
+                insertTables(TableDesc, progressDelta);
+
+
+
+
+
+
+                changeLog("Get Views Name");
+                //VIEWS
+                Dictionary<string, string> viewAllias = new Dictionary<string, string>();
+                views.ForEach(view =>
+                {
+                    viewAllias.Add(view, getAlliasView(view));
+
+
+                });
+                totalProgress = 20f;
+                string sql;
+                foreach (var view in viewAllias)
+                {
+                    //Console.WriteLine("=================================");
+                    sql = $"CREATE VIEW {view.Key.Replace(" ", "")} AS {view.Value}";
+                    while (true)
+                    {
+
+                        //fixing the sql command. In mysql, cast () cannot have blank space after it
+
+                        var words = sql.Split(' ');
+
+                        sql = "";
+                        for (int i = 0; i < words.Length; i++)
+                        {
+                            if (words[i] == "cast")
                             {
-                                TableDesc[tableName][lastIndexColumn] += ")";
+                                //ignore the blank space
+                                sql += words[i];
+                                sql += words[i + 1];
+                                i++;
                             }
                             else
                             {
-                                
-                                TableDesc[tableName][lastIndexColumn] += ", ";
+                                sql += " " + words[i];
                             }
                         }
+                        //replacing numeric to decimal
+                        sql = sql.Replace("numeric", "decimal");
+
+                        Console.WriteLine(sql);
+
+                        MySqlCommand query = new MySqlCommand(sql, connMysql);
+                        try
+                        {
+                            query.ExecuteNonQuery();
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+
+                            if (ex.Message.ToLower().IndexOf("duplicate") > -1)
+                            {
+                                changeLog("view contain duplicate column name, generating new column name...");
+                                var columnName = ex.Message.Split(' ')[ex.Message.Split(' ').Length - 1].Replace("'", "");
+                                //words = sql.Split(' ');
+                                //int indexWord = sql.IndexOf(columnName);
+                                int i = 0;
+                                //ini loop terus sampai replacenya sudah sama dengan sql (maka artinyatidak ada lagi yang perlu direplace)
+                                //problem: ini selalu ngereplace nama column pertama, tidak pernah nyentuh kolom berikutnya
+                                while (sql != ReplaceFirst(sql,columnName,$"{columnName}{i}"))
+                                {
+                                    sql = ReplaceFirst(sql, columnName,$"{columnName}{i}");
+                                    i++;
+
+                                }
+
+                                
+                            }
+                            else
+                            {
+                                Console.WriteLine(ex.Message);
+                                break;
+                            }
+
+                        }
                     }
-                  
+                    progressDelta = (totalProgress * 1f / viewAllias.Count) - (totalProgress * 0f / viewAllias.Count);
+                    progress += progressDelta;
+                    changeLog($"VIEW {view.Key} INSERTED");
                 }
-                lastIndexColumn = TableDesc[tableName].Count - 1;
+                progress = 100;
+                changeLog("Done");
+            }
 
-                //if(TableDesc[tableName][lastIndexColumn].IndexOf("primary key") > -1){
-                //    TableDesc[tableName][lastIndexColumn] += ")";
-                //}
-                backgroundWorker1.ReportProgress((int) (progress += progressDelta));
-
-
-            });
-            totalProgress = 20f;
-            int tableCount = TableDesc.Count;
-            progressDelta = (totalProgress * 1f / tableCount) - (totalProgress * 0f / tableCount);
-            createTables(TableDesc,progressDelta);
-
-
-            totalProgress = 40f;
-            progressDelta = (totalProgress * 1f / tableCount) - (totalProgress * 0f / tableCount);
-            insertTables(TableDesc, progressDelta);
             //Console.WriteLine(TableDesc);
+        }
+        public string ReplaceFirst(string text, string search, string replace)
+        {
+            int pos = text.IndexOf(search);
+            if (pos < 0)
+            {
+                return text;
+            }
+            return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+        }
+        private string getAlliasView(string viewName)
+        {
+            FbCommand query = new FbCommand($"select rdb$view_source from rdb$relations where rdb$relation_name = '{viewName.ToUpper()}' ", connFB);
+            Console.WriteLine($"select rdb$view_source from rdb$relations where rdb$relation_name = '{viewName.ToUpper().Replace(" ", "")}'");
+            readerFB = query.ExecuteReader();
+            readerFB.Read();
+            return readerFB.GetString(0);
+
+        }
+        private List<string> getAllViews()
+        {
+            List<string> result = new List<string>();
+
+            FbCommand queryFB = new FbCommand("select rdb$relation_name from rdb$relations where rdb$view_blr is not null and (rdb$system_flag is null or rdb$system_flag = 0); ", connFB);
+            readerFB = queryFB.ExecuteReader();
+            while (readerFB.Read())
+            {
+                result.Add(readerFB.GetString(0));
+            }
+            readerFB.Close();
+            return result;
         }
         private void InsertTableChildThread(string namaTabel)
         {
 
         }
         FbDataReader sqlReader;
-        private void insertTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
+        private void insertTables(Dictionary<string, List<string>> tableDesc, float progressDelta)
         {
             int index = 0;
-            MySqlCommand queryMySql = new MySqlCommand("",connMysql);
+            MySqlCommand queryMySql = new MySqlCommand("", connMysql);
             bool startNow = false;
             foreach (var table in tableDesc)
             {
@@ -363,7 +496,7 @@ namespace migrationTool
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
 
-                        if(reader.GetDataTypeName(i).ToUpper() == "VARCHAR"|| reader.GetDataTypeName(i).ToUpper() == "CHAR")
+                        if (reader.GetDataTypeName(i).ToUpper() == "VARCHAR" || reader.GetDataTypeName(i).ToUpper() == "CHAR")
                         {
                             //result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"'{reader.GetString(i).Replace("'","''")}'" : "null";
                             result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"{reader.GetString(i)}" : null;
@@ -372,79 +505,79 @@ namespace migrationTool
                             fieldValue.Add(result);
                             continue;
                         }
-                        if(reader.GetDataTypeName(i).ToUpper() == "DATETIME" || reader.GetDataTypeName(i).ToUpper() == "DATE" || reader.GetDataTypeName(i).ToUpper() == "TIMESTAMP")
+                        if (reader.GetDataTypeName(i).ToUpper() == "DATETIME" || reader.GetDataTypeName(i).ToUpper() == "DATE" || reader.GetDataTypeName(i).ToUpper() == "TIMESTAMP")
                         {
                             //result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"\"{reader.GetString(i)}\"" : "null";
                             result = reader.GetString(i) != "" && reader.GetString(i) != null ? $"{reader.GetString(i)}" : null;
 
                             //if (result == "null")
                             if (result == null)
-                                {
-                                    sqlMysql += $"@param{i},";
-                                    fieldValue.Add(null);
+                            {
+                                sqlMysql += $"@param{i},";
+                                fieldValue.Add(null);
 
                                 //sqlMysql += $"{result},"; //\"20/02/2010 00:00:00\"
                             }
                             else
+                            {
+                                try
                                 {
-                                    try
+                                    DateTime dateTime = DateTime.ParseExact(result.Replace("\"", ""), "dd/MM/yyyy HH:mm:ss", null);
+                                    if (dateTime.Year >= 2999 || dateTime.Year <= 1000)
                                     {
-                                        DateTime dateTime = DateTime.ParseExact(result.Replace("\"",""), "dd/MM/yyyy HH:mm:ss", null);
-                                        if (dateTime.Year >= 2999||dateTime.Year <= 1000)
+                                        if (forceModeCheckBox.Checked)
                                         {
-                                            if (forceModeCheckBox.Checked)
-                                            {
-                                                result = null;
-                                            }
-                                            else
-                                            {
-                                                throw new Exception("incorrect Year");
-
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}");
-                                        MessageBox.Show($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}", "Error Parse date", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    }
-
-                                    if (result != null)
-                                    {
-
-                                        fieldValue.Add(result);
-                                        if (result.IndexOf("-") != -1)
-                                        {
-                                            sqlMysql += $"STR_TO_DATE(@param{i},'%d-%m-%Y %H:%i:%S' ),";
-                                            Console.WriteLine("contain -");
-
+                                            result = null;
                                         }
                                         else
                                         {
-                                            sqlMysql += $"STR_TO_DATE(@param{i},'%d/%m/%Y %H:%i:%S' ),";
+                                            throw new Exception("incorrect Year");
 
                                         }
-                                            //sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}");
+                                    MessageBox.Show($"{ex.Message}\n\n{result.Replace("'", "")}\nIn Table: {table.Key} \nDate: {result}\nRaw SQL: \n{sqlMysql}", "Error Parse date", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+
+                                if (result != null)
+                                {
+
+                                    fieldValue.Add(result);
+                                    if (result.IndexOf("-") != -1)
+                                    {
+                                        sqlMysql += $"STR_TO_DATE(@param{i},'%d-%m-%Y %H:%i:%S' ),";
+                                        Console.WriteLine("contain -");
+
                                     }
                                     else
                                     {
-                                        fieldValue.Add(null);
-                                        sqlMysql += $"@param{i},";
+                                        sqlMysql += $"STR_TO_DATE(@param{i},'%d/%m/%Y %H:%i:%S' ),";
+
+                                    }
+                                    //sqlMysql += $"STR_TO_DATE({result},'%d/%m/%Y %H:%i:%S' ),"; //'20/02/2010 00:00:00'
+                                }
+                                else
+                                {
+                                    fieldValue.Add(null);
+                                    sqlMysql += $"@param{i},";
 
                                     //sqlMysql += $"{result},"; //'20/02/2010 00:00:00'
 
-                                    }
                                 }
+                            }
 
-                         
+
                             continue;
                         }
-                        if (reader.GetDataTypeName(i).ToUpper() == "DECIMAL" || reader.GetDataTypeName(i).ToUpper() == "NUMERIC" )
+                        if (reader.GetDataTypeName(i).ToUpper() == "DECIMAL" || reader.GetDataTypeName(i).ToUpper() == "NUMERIC")
                         {
                             decimal resultDecimal;
                             try
                             {
-                                if(reader.GetDecimal(i) != null)
+                                if (reader.GetDecimal(i) != null)
                                 {
                                     resultDecimal = reader.GetDecimal(i);
                                     //sqlMysql += $"{resultDecimal.ToString().Replace(',','.')},";
@@ -459,10 +592,10 @@ namespace migrationTool
                                 }
 
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
-                                if(!forceModeCheckBox.Checked)
-                                    MessageBox.Show($"{ex.Message} \ndataString: {reader.GetString(i)}","Error Parsing To Decimal", MessageBoxButtons.OK,MessageBoxIcon.Error);
+                                if (!forceModeCheckBox.Checked)
+                                    MessageBox.Show($"{ex.Message} \ndataString: {reader.GetString(i)}", "Error Parsing To Decimal", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 fieldValue.Add(null);
                                 sqlMysql += $"@param{i},";
@@ -472,7 +605,7 @@ namespace migrationTool
                             continue;
                         }
 
-                        result = reader.GetString(i) != null && reader.GetString(i) !=string.Empty ? reader.GetString(i) : null;
+                        result = reader.GetString(i) != null && reader.GetString(i) != string.Empty ? reader.GetString(i) : null;
                         fieldValue.Add(result);
                         sqlMysql += $"@param{i},";
                     }
@@ -497,7 +630,7 @@ namespace migrationTool
                         var res = queryMySql.ExecuteNonQuery();
 
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         if (ignoreDuplicateKey.Checked)
                         {
@@ -510,7 +643,7 @@ namespace migrationTool
                             {
                                 if (!forceModeCheckBox.Checked)
                                 {
-                                    MessageBox.Show($"{ex.Message} \n {sqlMysql}","Data Mismatch!",MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    MessageBox.Show($"{ex.Message} \n {sqlMysql}", "Data Mismatch!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     Application.Exit();
 
                                 }
@@ -531,14 +664,14 @@ namespace migrationTool
                         //Console.WriteLine($"{ex.Message} \n {sqlMysql}");
                     }
                 }
-                backgroundWorker1.ReportProgress((int)(progress+=progressDelta));
+                backgroundWorker1.ReportProgress((int)(progress += progressDelta));
                 index++;
                 //Console.WriteLine($"{index}/{tableDesc.Count}");
                 changeLog($"{index}/{tableDesc.Count}");
             }
             backgroundWorker1.ReportProgress(100);
         }
-        private void createTables(Dictionary<string,List<string>> tableDesc, float progressDelta)
+        private void createTables(Dictionary<string, List<string>> tableDesc, float progressDelta)
         {
             int countTable = 0;
             foreach (var table in tableDesc)
@@ -557,20 +690,20 @@ namespace migrationTool
                 countTable++;
                 try
                 {
-                  MySqlCommand query = new MySqlCommand(sql, connMysql);
+                    MySqlCommand query = new MySqlCommand(sql, connMysql);
                     var res = query.ExecuteNonQuery();
 
                 }
-                catch(Exception EX)
+                catch (Exception EX)
                 {
                     if (!ignoreExistCheckBox.Checked)
                     {
-                        MessageBox.Show((EX.Message),$"Error Create Table {table.Key}",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                        MessageBox.Show((EX.Message), $"Error Create Table {table.Key}", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         Application.Exit();
                     }
                     Console.WriteLine(EX.Message);
                 }
-                backgroundWorker1.ReportProgress((int)(progress+=progressDelta));
+                backgroundWorker1.ReportProgress((int)(progress += progressDelta));
             };
         }
         private void button1_Click(object sender, EventArgs e)
