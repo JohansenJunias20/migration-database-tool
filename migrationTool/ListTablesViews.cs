@@ -42,5 +42,45 @@ namespace migrationTool
             isOK = true;
             this.Close();
         }
+
+        private void selectAllTableCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (selectAllTableCheckBox.Checked)
+            {
+                for (int i = 0; i < tableCheckedListBox.Items.Count; i++)
+                {
+
+                    tableCheckedListBox.SetItemChecked(i, true);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < tableCheckedListBox.Items.Count; i++)
+                {
+
+                    tableCheckedListBox.SetItemChecked(i, false);
+                }
+            }
+        }
+
+        private void selectAllViewCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (selectAllViewCheckBox.Checked)
+            {
+                for (int i = 0; i < viewCheckedListBox.Items.Count; i++)
+                {
+
+                    viewCheckedListBox.SetItemChecked(i, true);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < viewCheckedListBox.Items.Count; i++)
+                {
+
+                    viewCheckedListBox.SetItemChecked(i, false);
+                }
+            }
+        }
     }
 }
