@@ -241,7 +241,7 @@ namespace migrationTool
             changeLog("Opening Connection");
             openConnection();
 
-            changeLog("getting Tabel List");
+            changeLog("getting Tables and Views List List");
 
             List<string> views = getAllViews();
             List<string> tableList = getAllTableList();
@@ -392,30 +392,37 @@ namespace migrationTool
                         }
                         catch (Exception ex)
                         {
-
-                            if (ex.Message.ToLower().IndexOf("duplicate") > -1)
-                            {
-                                changeLog("view contain duplicate column name, generating new column name...");
-                                var columnName = ex.Message.Split(' ')[ex.Message.Split(' ').Length - 1].Replace("'", "");
-                                //words = sql.Split(' ');
-                                //int indexWord = sql.IndexOf(columnName);
-                                int i = 0;
-                                //ini loop terus sampai replacenya sudah sama dengan sql (maka artinyatidak ada lagi yang perlu direplace)
-                                //problem: ini selalu ngereplace nama column pertama, tidak pernah nyentuh kolom berikutnya
-                                while (sql != ReplaceFirst(sql,columnName,$"{columnName}{i}"))
+                            if (ex.Message.ToLower().IndexOf("already exist") >-1) {
+                                if (ignoreExistCheckBox.Checked)
                                 {
-                                    sql = ReplaceFirst(sql, columnName,$"{columnName}{i}");
-                                    i++;
-
+                                    changeLog($"table {view.Key} already exist, skipping table..");
+                                    break;
                                 }
-
-                                
+                                else
+                                {
+                                    if(MessageBox.Show($"Table: {view.Key}\n Reason: {ex.Message}\n\n if you want to ignore this, please check the ignore Exist checkbox.\n Skip this table ?", "cannot countinue", MessageBoxButtons.OKCancel, MessageBoxIcon.Error)
+                                        == DialogResult.OK)
+                                    {
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        Application.Exit();
+                                    }
+                                }
                             }
-                            else
+
+                            ViewExceptionHandler viewExceptionHandlerForm = new ViewExceptionHandler(sql, ex.Message);
+                            viewExceptionHandlerForm.ShowDialog();
+                            if (viewExceptionHandlerForm.isSkip)
                             {
-                                Console.WriteLine(ex.Message);
                                 break;
                             }
+                            if (viewExceptionHandlerForm.isRetry)
+                            {
+                                sql = viewExceptionHandlerForm.fixedSql;
+                            }
+                          
 
                         }
                     }

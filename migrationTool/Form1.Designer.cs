@@ -61,8 +61,6 @@ namespace migrationTool
             this.forceModeCheckBox = new System.Windows.Forms.CheckBox();
             this.forceModeTip = new System.Windows.Forms.ToolTip(this.components);
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.tableCheckBox = new System.Windows.Forms.CheckBox();
-            this.viewCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -325,33 +323,11 @@ namespace migrationTool
             this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
             this.backgroundWorker2.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker2_ProgressChanged);
             // 
-            // tableCheckBox
-            // 
-            this.tableCheckBox.AutoSize = true;
-            this.tableCheckBox.Location = new System.Drawing.Point(840, 170);
-            this.tableCheckBox.Name = "tableCheckBox";
-            this.tableCheckBox.Size = new System.Drawing.Size(53, 17);
-            this.tableCheckBox.TabIndex = 19;
-            this.tableCheckBox.Text = "Table";
-            this.tableCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // viewCheckBox
-            // 
-            this.viewCheckBox.AutoSize = true;
-            this.viewCheckBox.Location = new System.Drawing.Point(840, 203);
-            this.viewCheckBox.Name = "viewCheckBox";
-            this.viewCheckBox.Size = new System.Drawing.Size(54, 17);
-            this.viewCheckBox.TabIndex = 20;
-            this.viewCheckBox.Text = "Views";
-            this.viewCheckBox.UseVisualStyleBackColor = true;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1056, 450);
-            this.Controls.Add(this.viewCheckBox);
-            this.Controls.Add(this.tableCheckBox);
+            this.ClientSize = new System.Drawing.Size(771, 450);
             this.Controls.Add(this.forceModeCheckBox);
             this.Controls.Add(this.ignoreDuplicateKey);
             this.Controls.Add(this.showLog);
@@ -407,8 +383,6 @@ namespace migrationTool
         private System.Windows.Forms.CheckBox forceModeCheckBox;
         private System.Windows.Forms.ToolTip forceModeTip;
         private System.ComponentModel.BackgroundWorker backgroundWorker2;
-        private System.Windows.Forms.CheckBox tableCheckBox;
-        private System.Windows.Forms.CheckBox viewCheckBox;
     }
 }
 
